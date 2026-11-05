@@ -26,14 +26,14 @@
   // One model per lab, so a comparison shows a spread of house styles rather
   // than four versions of the same one.
   var MODELS = [
-    { id: "openai/gpt-5.4-nano", lab: "[OI]" },
-    { id: "openai/gpt-5.4-mini", lab: "[OI]" },
-    { id: "deepseek/deepseek-v4.1-flash", lab: "DeepSeek" },
-    { id: "meta/llama-3.3-70b-instruct", lab: "Meta" },
-    { id: "mistralai/mistral-large-3", lab: "Mistral" },
-    { id: "x-ai/grok-4.3", lab: "xAI" },
-    { id: "moonshotai/kimi-k2.6", lab: "Moonshot" },
-    { id: "openai/gpt-oss-20b", lab: "[OI]" }
+    { id: "openai/gpt-5.4-nano", lab: "GPT-5.4 nano" },
+    { id: "openai/gpt-5.4-mini", lab: "GPT-5.4 mini" },
+    { id: "deepseek/deepseek-v4.1-flash", lab: "DeepSeek V4.1" },
+    { id: "meta/llama-3.3-70b-instruct", lab: "Llama 3.3 70B" },
+    { id: "mistralai/mistral-large-3", lab: "Mistral Large 3" },
+    { id: "x-ai/grok-4.3", lab: "Grok 4.3" },
+    { id: "moonshotai/kimi-k2.6", lab: "Kimi K2.6" },
+    { id: "openai/gpt-oss-20b", lab: "GPT-OSS 20B" }
   ];
   var DEFAULT_ON = 4;
   var TIMEOUT_MS = 90000;
