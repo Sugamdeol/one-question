@@ -8,6 +8,8 @@ the pack.
 
 Live app: https://sugamdeol.github.io/one-question/
 
+![One Question: the same prompt answered by four models, with the judge panel below](docs/screenshot.png)
+
 ## What it does
 
 Every model has a house style. Put them on the same prompt and the differences stop being
