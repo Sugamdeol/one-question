@@ -393,7 +393,15 @@
 
   function askOne(m, prompt) {
     var answer = { id: m.id, lab: m.lab, text: "", state: "asking", ok: false, done: false, ms: 0, tokens: 0, error: "", agree: null };
-    return call(m.id, [{ role: "user", content: prompt }], MAX_TOKENS).then(function (res) {
+    var msgs = [{ role: "user", content: prompt }];
+    return call(m.id, msgs, MAX_TOKENS).catch(function (e) {
+      // Reasoning models can spend the whole budget thinking and return 400
+      // without an answer; one retry with room to think fixes that.
+      if (e && /exhausted its output token limit/i.test(e.message || "")) {
+        return call(m.id, msgs, MAX_TOKENS * 4);
+      }
+      throw e;
+    }).then(function (res) {
       answer.ms = res.ms;
       answer.tokens = res.tokens;
       if (!res.text) {
@@ -474,9 +482,14 @@
       state.judge = res.text;
       var body = $("#judgeBody");
       body.textContent = "";
-      String(res.text).split(/\n+/).filter(Boolean).forEach(function (line) {
+      // The judge usually answers in four lines, but some models run them
+      // together; split on the labels as a fallback so the panel still reads.
+      var lines = String(res.text).indexOf("\n") !== -1
+        ? String(res.text).split(/\n+/)
+        : String(res.text).split(/(?=(?:Split|Camps|Outlier|Missing):)/);
+      lines.filter(function (l) { return l.trim(); }).forEach(function (line) {
         var p = document.createElement("p");
-        p.textContent = line.replace(/^[-*]\s*/, "");
+        p.textContent = line.replace(/^[-*]\s*/, "").trim();
         body.appendChild(p);
       });
       $("#judgePanel").style.display = "block";
