@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One Question - the same prompt, every model, side by side</title>
+<meta name="description" content="Ask several AI models the same question at once, read the answers side by side, and see which one breaks from the pack. Built on Pollinations; you pay with your own Pollen.">
+<style>
+  :root{
+    --paper:#faf8f4; --ink:#14120f; --muted:#6b655c; --rule:#ded8cc;
+    --accent:#1f4d3a; --accent-soft:#e7efe9; --warn:#8a3a12; --card:#ffffff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:Georgia,"Iowan Old Style","Times New Roman",serif;font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 26px}
+  header{border-bottom:1px solid var(--rule);padding:22px 0 18px}
+  .top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
+  h1{font-size:32px;margin:0;letter-spacing:-.02em;font-weight:600}
+  h1 em{font-style:italic;color:var(--accent)}
+  .tag{color:var(--muted);max-width:52ch;margin:6px 0 0;font-size:15px}
+  .authbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .who{font-size:13px;color:var(--muted);max-width:190px;text-align:right}
+  button{font-family:inherit;font-size:15px;cursor:pointer;border-radius:2px}
+  .btn{background:var(--ink);color:#fff;border:1px solid var(--ink);padding:10px 18px}
+  .btn:hover{background:var(--accent);border-color:var(--accent)}
+  .btn[disabled]{opacity:.4;cursor:not-allowed}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--rule);padding:8px 14px;font-size:14px}
+  .btn-ghost:hover{border-color:var(--ink)}
+  main{padding:32px 0 56px}
+  .ask{border:1px solid var(--rule);background:var(--card);padding:22px;border-radius:3px}
+  .labelrow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  textarea{width:100%;min-height:84px;resize:vertical;padding:12px 13px;font-family:inherit;font-size:17px;line-height:1.5;color:var(--ink);background:#fdfcf9;border:1px solid var(--rule);border-radius:2px}
+  textarea:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+  .examples{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .ex{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;background:#f3efe6;border:1px solid var(--rule);color:#3d382f;padding:5px 10px;border-radius:999px;cursor:pointer}
+  .ex:hover{border-color:var(--ink)}
+  .models{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+  .chip{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border:1px solid var(--rule);border-radius:999px;background:#fdfcf9;cursor:pointer;font-size:13px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#3d382f}
+  .chip input{accent-color:var(--accent);margin:0}
+  .chip.on{background:var(--accent-soft);border-color:#b9cfc2;color:var(--ink)}
+  .hint{color:var(--muted);font-size:13.5px;margin-top:10px}
+  .under{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-top:18px;flex-wrap:wrap}
+  .keyrow{display:flex;gap:8px;align-items:center;margin-top:16px;flex-wrap:wrap}
+  .keyrow input{flex:1;min-width:240px;padding:8px 10px;border:1px solid var(--rule);border-radius:2px;background:#fdfcf9;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;color:var(--ink)}
+  .bar{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:30px 0 4px;flex-wrap:wrap}
+  .bar h2{font-size:15px;margin:0;font-weight:600}
+  .bar .stat{color:var(--muted);font-size:13.5px}
+  .summary{font-size:14.5px;color:#33302a;margin:2px 0 12px;min-height:22px}
+  .summary b{color:var(--accent)}
+  .status{min-height:20px;color:var(--muted);font-size:14px;margin-bottom:12px}
+  .status.err{color:var(--warn)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+  .card{border:1px solid var(--rule);background:var(--card);border-radius:3px;padding:15px 16px 13px;display:flex;flex-direction:column;min-height:180px}
+  .card.pending{opacity:.72}
+  .card.bad{border-color:#e3cfc4;background:#fdf7f4}
+  .card.best{border-color:#b9cfc2;box-shadow:inset 0 0 0 1px #dcebe1}
+  .head{display:flex;justify-content:space-between;gap:10px;align-items:baseline;border-bottom:1px solid #efeade;padding-bottom:9px;margin-bottom:11px}
+  .mname{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;font-weight:600;word-break:break-word}
+  .lab{font-size:11px;color:var(--muted);white-space:nowrap}
+  .answer{white-space:pre-wrap;font-size:15.5px;line-height:1.52;flex:1;overflow-wrap:anywhere}
+  .answer.empty{color:var(--muted);font-style:italic}
+  .foot{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:13px;padding-top:9px;border-top:1px solid #efeade;font-size:12px;color:var(--muted);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .agree{position:relative;flex:1;height:4px;background:#eee9dd;border-radius:2px;overflow:hidden;max-width:88px}
+  .agree i{position:absolute;inset:0 auto 0 0;background:var(--accent);display:block}
+  .judge{border:1px solid var(--rule);background:#fdfcf9;border-left:3px solid var(--accent);padding:16px 18px;margin:22px 0 0;border-radius:2px;display:none}
+  .judge h3{margin:0 0 8px;font-size:14px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+  .judge p{margin:0 0 8px;font-size:15.5px}
+  .judge p:last-child{margin-bottom:0}
+  a{color:var(--accent)}
+  footer{border-top:1px solid var(--rule);padding:20px 0 44px;color:var(--muted);font-size:13.5px}
+  @media (max-width:640px){body{font-size:16px}h1{font-size:26px}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap top">
+    <div>
+      <h1>One <em>Question</em></h1>
+      <p class="tag">Put the same prompt to several models at once. Read the answers side by side, and see which one breaks from the pack.</p>
+    </div>
+    <div class="authbox">
+      <span class="who" id="who">Not signed in</span>
+      <button class="btn-ghost" id="signBtn">Sign in with Pollen</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="ask">
+    <div class="labelrow">
+      <label class="mono" for="q">Your question</label>
+      <span class="mono" id="qcount">0 chars</span>
+    </div>
+    <textarea id="q" placeholder="e.g. Is a hot dog a sandwich? Answer in two sentences."></textarea>
+    <div class="examples" id="examples"></div>
+
+    <div style="margin-top:18px">
+      <span class="mono">Models, pick at least two</span>
+      <div class="models" id="models"></div>
+    </div>
+
+    <div class="under">
+      <div>
+        <button class="btn" id="askBtn">Ask every model</button>
+        <button class="btn-ghost" id="clearBtn" style="margin-left:8px">Clear</button>
+      </div>
+      <span class="hint" id="costHint"></span>
+    </div>
+
+    <div class="keyrow">
+      <input id="keyInput" type="password" autocomplete="off" placeholder="or paste a Pollinations secret key (sk_...)">
+      <button class="btn-ghost" id="keyBtn" type="button">Use this key</button>
+    </div>
+    <p class="hint">Every call runs in your browser with your own Pollinations key, so your own Pollen pays. The key is kept in this tab and never passes through a server of ours.</p>
+  </section>
+
+  <div class="bar">
+    <h2>Answers</h2>
+    <span class="stat" id="resultStat"></span>
+  </div>
+  <p class="summary" id="summary"></p>
+  <div class="status" id="status"></div>
+  <div class="grid" id="grid"></div>
+
+  <div class="judge" id="judgePanel">
+    <h3>Where they split</h3>
+    <div id="judgeBody"></div>
+  </div>
+
+  <div class="under" id="afterRow" style="display:none">
+    <div>
+      <button class="btn-ghost" id="judgeBtn">Ask a judge to map the split</button>
+      <button class="btn-ghost" id="mdBtn" style="margin-left:8px">Copy as Markdown</button>
+    </div>
+    <span class="hint">The judge reads the answers you already paid for and adds one more call.</span>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap" style="padding:0;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap">
+    <span>One Question. <a href="https://pollinations.ai/?ref=badge" target="_blank" rel="noopener">Made with pollinations.ai</a></span>
+    <span class="mono">Quest #19183</span>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
